@@ -1,6 +1,6 @@
 local M = {}
-local vim = vim
 
+local vim = vim
 --- default config
 ---@class BackpackConfig
 M.config = {
@@ -23,16 +23,6 @@ function M.setup(config)
   else
       vim.notify("Anchorage: Errors found while loading user config. Using default config.", vim.log.levels.ERROR)
   end
-
-  function AnchorageMarkFoldable()
-    require('anchorage.mark_foldable')(config)
-  end
-
-  local cmd = vim.cmd
-  cmd([[nnoremap z <cmd>execute "lua AnchorageMarkFoldable()"<CR>]])
-
-  cmd([[autocmd BufRead,BufNewFile, * execute "lua AnchorageMarkFoldable()"]])
-  cmd([[autocmd CursorMoved,CursorMovedI * execute "lua AnchorageMarkFoldable()"]])
 end
 
 return M
