@@ -8,8 +8,8 @@ if (string.len(background) <= 0) then
   background = 'NONE'
 end
 
-local function InsertMarker(lineNumber, char, col, position, ns_id)
-  vim.cmd([[hi AccordianMarker guifg=#5f5f5f guibg=]] .. background)
+local function InsertMarker(lineNumber, char, col, position, ns_id, fg, bg)
+  vim.cmd([[hi AccordianMarker guifg=]] .. fg .. [[guibg=]] .. bg or background)
 
   local api = vim.api
   local bnr = vim.fn.bufnr('%')

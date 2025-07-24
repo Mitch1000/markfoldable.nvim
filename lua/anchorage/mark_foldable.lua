@@ -46,12 +46,14 @@ local function ClearVirtualText()
   vim.api.nvim_buf_clear_namespace(bnr, arrow_id, 0, vim.fn.line('$'))
 end
 
-local function MarkFoldable()
+local function MarkFoldable(config)
   ClearVirtualText()
   -- local open_marker = ""
-  local open_marker = ""
-  local closed_marker = ""
+  local open_marker = config.opened_icon
+  local closed_marker = config.closed_icon
   local closed_folds_lnums = {}
+  local bg = config.anchor_bg
+  local fg = config.anchor_color
   -- Define the fold expression func
   local InsertMarker = require("helpers.insert_marker")
 
@@ -65,7 +67,7 @@ local function MarkFoldable()
 
     if is_closed then table.insert(closed_folds_lnums, lnum) end
     local mark = is_closed and open_marker or closed_marker
-    InsertMarker(lnum - 1, mark, 0, "overlay", arrow_id)
+    InsertMarker(lnum - 1, mark, 0, "overlay", arrow_id, fg, bg)
   end
 
   local function SpaceLines(lnum, position)
@@ -73,7 +75,7 @@ local function MarkFoldable()
     if lnum > vim.fn.line('$') then return end
 
     --if not IsEmptyLine(lnum) then
-    return InsertMarker(lnum - 1, "  ", 0, position, spaces_id)
+    return InsertMarker(lnum - 1, "  ", 0, position, spaces_id, fg, bg)
   end
 
   for lnum = vim.fn.line('w0'),vim.fn.line('w$'),1 do
@@ -87,10 +89,10 @@ end
 
 local hasErrored = false
 
-return function()
+return function(config)
   if (hasErrored == true) then return end
 
-  local status, result = pcall(MarkFoldable)
+  local status, result = pcall(MarkFoldable, config)
 
   if not status then
     hasErrored = true

@@ -7,7 +7,7 @@ M.config = {
   opened_icon = '',
   closed_icon = '',
   anchor_color = "#5f5f5f",
-  anchor_bg = "none",
+  anchor_bg = nil,
 }
 
 local function check_config(config)
@@ -25,7 +25,7 @@ function M.setup(config)
   end
 
   function AnchorageMarkFoldable()
-    require('anchorage.mark_foldable')()
+    require('anchorage.mark_foldable')(config)
   end
 
   local cmd = vim.cmd
