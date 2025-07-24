@@ -1,0 +1,10 @@
+{
+  "name": "anchorage",
+  "version": "1.0.0",
+  "repository": "git@github.com:mitch1000/anchorage.nvim.git",
+  "author": "Mitchell Drohan <mwdrohan@gmail.com>",
+  "license": "MIT",
+  "vim": {
+    "opt": true
+  }
+}
