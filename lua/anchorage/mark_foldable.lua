@@ -53,7 +53,7 @@ local function MarkFoldable(config)
   local closed_marker = config.closed_icon
   local closed_folds_lnums = {}
   -- Define the fold expression func
-  local InsertMarker = require("anchorage.insert_marker")
+  local InsertMarker = require("markfoldable.insert_marker")
 
   local function MarkLines(lnum)
     if (lnum == 0) then return end

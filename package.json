@@ -1,7 +1,7 @@
 {
-  "name": "anchorage",
+  "name": "markfoldable",
   "version": "1.0.0",
-  "repository": "git@github.com:mitch1000/anchorage.nvim.git",
+  "repository": "git@github.com:mitch1000/markfoldable.nvim.git",
   "author": "Mitchell Drohan <mwdrohan@gmail.com>",
   "license": "MIT",
   "vim": {

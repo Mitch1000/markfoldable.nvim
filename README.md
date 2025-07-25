@@ -21,7 +21,7 @@ A simple Neovim plugin for marking folds as opened or closed.
       vim.o.foldlevel = 99 
 
       require('ufo').setup({
-        fold_virt_text_handler = require('anchorage.ufo_handler'),
+        fold_virt_text_handler = require('markfoldable.ufo_handler'),
       })
     end
   },
@@ -31,7 +31,7 @@ Note: This plugin is an extension of the amazing `kevinhwang91/nvim-ufo` plugin.
 ### Default Config
 
 ```lua
-  require('anchorage').setup({
+  require('markfoldable').setup({
     opened_icon = '',
     closed_icon = '',
     anchor_color = "#5f5f5f",

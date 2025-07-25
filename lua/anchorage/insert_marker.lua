@@ -1,6 +1,6 @@
 local vim = vim
 
-local GetHighlightColor = require('anchorage.get_highlight_color')
+local GetHighlightColor = require('markfoldable.get_highlight_color')
 
 local background = GetHighlightColor('Normal', 'guibg')
 

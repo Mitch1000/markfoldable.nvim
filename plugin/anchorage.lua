@@ -1,13 +1,13 @@
 local vim = vim
 local cmd = vim.cmd
 
-local con = require('anchorage.config')
+local con = require('markfoldable.config')
 
 con.set_default_config()
 local config = con.get_config()
 
 function AnchorageMarkFoldable()
-  require('anchorage.mark_foldable')(config)
+  require('markfoldable.mark_foldable')(config)
 end
 
 vim.on_key(function(key)
