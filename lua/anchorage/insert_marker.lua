@@ -1,15 +1,15 @@
 local vim = vim
 
-local GetHighlightColor = require("helpers.get_highlight_color")
--- 
+local GetHighlightColor = require('anchorage.get_highlight_color')
+
 local background = GetHighlightColor('Normal', 'guibg')
 
 if (string.len(background) <= 0) then
   background = 'NONE'
 end
 
-local function InsertMarker(lineNumber, char, col, position, ns_id, config)
-  local bg = config.anchor_bg
+local function InsertMarker(lineNumber, char, col, position, ns_id, config, set_bg)
+  local bg = set_bg or config.anchor_bg
   local fg = config.anchor_color
 
   local gui = ""
