@@ -70,7 +70,7 @@ local function MarkFoldable(config)
 
   local function SpaceLines(lnum, position)
     if lnum <= 0 then return end
-    if lnum > vim.fn.line('$') then return end
+    if lnum > vim.fn.line('w$') then return end
 
     --if not IsEmptyLine(lnum) then
     return InsertMarker(lnum - 1, "  ", 0, position, spaces_id, config)
