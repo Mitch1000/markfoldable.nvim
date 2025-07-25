@@ -7,6 +7,7 @@ local default_config = {
   opened_icon = '',
   closed_icon = '',
   anchor_color = "#5f5f5f",
+  anchor_cursor_color = "#7c7c7c",
   anchor_bg = nil,
   bold = false,
   italic = false,

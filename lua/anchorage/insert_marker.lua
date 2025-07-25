@@ -10,14 +10,21 @@ end
 
 local function InsertMarker(lineNumber, char, col, position, ns_id, config, is_open)
   local bg = config.anchor_bg
+  local fg = config.anchor_color
+
   local is_closed = is_open == false
 
   if is_closed then
     bg = GetHighlightColor('Folded', 'guibg')
-    print(bg)
   end
 
-  local fg = config.anchor_color
+  local is_current = vim.fn.line(".") == (lineNumber + 1)
+
+  if is_current then
+    bg = GetHighlightColor('CursorLine', 'guibg')
+    fg = config.anchor_cursor_color
+  end
+
 
   local gui = ""
 
@@ -31,6 +38,7 @@ local function InsertMarker(lineNumber, char, col, position, ns_id, config, is_o
 
   if is_open == false then higroup = 'AnchorageAccordianMarkerClosed' end
   if is_open then higroup = 'AnchorageAccordianMarkerOpen' end
+  if is_current then higroup = 'AnchorageAccordianMarkerCurrent' end
 
   local hilight = [[hi ]] .. higroup .. [[ guifg=]] .. fg .. [[ guibg=]] .. guibg
   if string.len(gui) > 0 then
