@@ -7,30 +7,40 @@ A simple Neovim plugin for marking folds as opened or closed.
 
 #### Lazy
 
+
+
 ```lua
   {
-    'mitch1000/anchorage.nvim',
+    'kevinhwang91/nvim-ufo',
+    dependencies = {
+      'kevinhwang91/promise-async',
+      'mitch1000/anchorage.nvim'
+    },
+    config = function ()
+      vim.o.foldcolumn = '0' 
+      vim.o.foldlevel = 99 
+
+      require('ufo').setup({
+        fold_virt_text_handler = require('anchorage.ufo_handler'),
+      })
+    end
   },
 ```
+Note: This plugin is an extension of the amazing `kevinhwang91/nvim-ufo` plugin.
 
 ### Default Config
 
 ```lua
-  {
-    'mitch1000/anchorage.nvim',
-    config = function()
-      require('anchorage').setup({
-        opened_icon = '',
-        closed_icon = '',
-        anchor_color = "#5f5f5f",
-        anchor_bg = nil,
-        bold = false,
-        italic = false,
-        underline = false,
-        undercurl = false,
-      })
-    end
-  },
+  require('anchorage').setup({
+    opened_icon = '',
+    closed_icon = '',
+    anchor_color = "#5f5f5f",
+    anchor_bg = nil,
+    bold = false,
+    italic = false,
+    underline = false,
+    undercurl = false,
+  })
 ```
 
 
