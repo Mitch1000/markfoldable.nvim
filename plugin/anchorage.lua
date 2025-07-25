@@ -1,17 +1,12 @@
 local vim = vim
 local cmd = vim.cmd
 
-local config = require('anchorage.config')
+local con = require('anchorage.config')
 
-function Sched()
-end
+con.set_default_config()
+local config = con.get_config()
 
 function AnchorageMarkFoldable()
-  require('anchorage.mark_foldable')(config)
-end
-
-
-function AnchorageMarkFoldableSleep()
   require('anchorage.mark_foldable')(config)
 end
 
@@ -22,7 +17,6 @@ vim.on_key(function(key)
     vim.schedule(AnchorageMarkFoldable)
   end
 end)
-
 
 cmd([[autocmd BufRead,BufNewFile, * execute "lua AnchorageMarkFoldable()"]])
 cmd([[autocmd CursorMoved,CursorMovedI * execute "lua AnchorageMarkFoldable()"]])

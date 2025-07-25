@@ -52,10 +52,8 @@ local function MarkFoldable(config)
   local open_marker = config.opened_icon
   local closed_marker = config.closed_icon
   local closed_folds_lnums = {}
-  local bg = config.anchor_bg
-  local fg = config.anchor_color
   -- Define the fold expression func
-  local InsertMarker = require("helpers.insert_marker")
+  local InsertMarker = require("anchorage.insert_marker")
 
   local function MarkLines(lnum)
     if (lnum == 0) then return end
@@ -67,7 +65,7 @@ local function MarkFoldable(config)
 
     if is_closed then table.insert(closed_folds_lnums, lnum) end
     local mark = is_closed and open_marker or closed_marker
-    InsertMarker(lnum - 1, mark, 0, "overlay", arrow_id, fg, bg)
+    InsertMarker(lnum - 1, mark, 0, "overlay", arrow_id, config)
   end
 
   local function SpaceLines(lnum, position)
@@ -75,7 +73,7 @@ local function MarkFoldable(config)
     if lnum > vim.fn.line('$') then return end
 
     --if not IsEmptyLine(lnum) then
-    return InsertMarker(lnum - 1, "  ", 0, position, spaces_id, fg, bg)
+    return InsertMarker(lnum - 1, "  ", 0, position, spaces_id, config)
   end
 
   for lnum = vim.fn.line('w0'),vim.fn.line('w$'),1 do

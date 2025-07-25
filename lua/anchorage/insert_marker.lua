@@ -8,8 +8,24 @@ if (string.len(background) <= 0) then
   background = 'NONE'
 end
 
-local function InsertMarker(lineNumber, char, col, position, ns_id, fg, bg)
-  vim.cmd([[hi AccordianMarker guifg=]] .. fg .. [[guibg=]] .. bg or background)
+local function InsertMarker(lineNumber, char, col, position, ns_id, config)
+  local bg = config.anchor_bg
+  local fg = config.anchor_color
+
+  local gui = ""
+
+  if config.italic then gui = gui .. "italic," end
+  if config.bold then gui = gui .. "bold," end
+  if config.underline then gui = gui .. "underline," end
+  if config.undercurl then gui = gui .. "undercurl," end
+  local guibg = bg or background
+
+  local hilight = [[hi AccordianMarker guifg=]] .. fg .. [[ guibg=]] .. guibg
+  if string.len(gui) > 0 then
+    hilight = hilight .. [[ gui=]] .. gui
+  end
+
+  vim.cmd(hilight)
 
   local api = vim.api
   local bnr = vim.fn.bufnr('%')
