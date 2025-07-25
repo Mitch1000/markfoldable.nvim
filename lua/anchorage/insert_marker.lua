@@ -8,8 +8,15 @@ if (string.len(background) <= 0) then
   background = 'NONE'
 end
 
-local function InsertMarker(lineNumber, char, col, position, ns_id, config, set_bg)
-  local bg = set_bg or config.anchor_bg
+local function InsertMarker(lineNumber, char, col, position, ns_id, config, is_open)
+  local bg = config.anchor_bg
+  local is_closed = is_open == false
+
+  if is_closed then
+    bg = GetHighlightColor('Folded', 'guibg')
+    print(bg)
+  end
+
   local fg = config.anchor_color
 
   local gui = ""
@@ -20,7 +27,12 @@ local function InsertMarker(lineNumber, char, col, position, ns_id, config, set_
   if config.undercurl then gui = gui .. "undercurl," end
   local guibg = bg or background
 
-  local hilight = [[hi AccordianMarker guifg=]] .. fg .. [[ guibg=]] .. guibg
+  local higroup = 'AnchorageMarkerSpacer'
+
+  if is_open == false then higroup = 'AnchorageAccordianMarkerClosed' end
+  if is_open then higroup = 'AnchorageAccordianMarkerOpen' end
+
+  local hilight = [[hi ]] .. higroup .. [[ guifg=]] .. fg .. [[ guibg=]] .. guibg
   if string.len(gui) > 0 then
     hilight = hilight .. [[ gui=]] .. gui
   end
@@ -35,7 +47,7 @@ local function InsertMarker(lineNumber, char, col, position, ns_id, config, set_
   local opts = {
     end_line = 0,
     id = lineNumber +1,
-    virt_text = {{char, "AccordianMarker"}},
+    virt_text = {{char, higroup}},
     virt_text_pos = position,
   }
 

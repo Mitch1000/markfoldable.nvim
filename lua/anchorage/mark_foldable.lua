@@ -3,7 +3,7 @@ local vim = vim
 local spaces_id = vim.api.nvim_create_namespace('folder_spaces')
 local arrow_id = vim.api.nvim_create_namespace('folder_ids')
 
-local function GetIsClosed(lnum)
+local function GetIsOpen(lnum)
   local total_lines = vim.fn.line('$')
   if (lnum + 1 >= total_lines) then return false end
   if not (vim.fn.foldclosed(lnum + 1) == -1) then return false end
@@ -61,11 +61,11 @@ local function MarkFoldable(config)
 
     if not IsMarked(lnum) then return end
 
-    local is_closed = GetIsClosed(lnum)
+    local is_open = GetIsOpen(lnum)
 
-    if is_closed then table.insert(closed_folds_lnums, lnum) end
-    local mark = is_closed and open_marker or closed_marker
-    InsertMarker(lnum - 1, mark, 0, "overlay", arrow_id, config)
+    if is_open then table.insert(closed_folds_lnums, lnum) end
+    local mark = is_open and open_marker or closed_marker
+    InsertMarker(lnum - 1, mark, 0, "overlay", arrow_id, config, is_open)
   end
 
   local function SpaceLines(lnum, position)
