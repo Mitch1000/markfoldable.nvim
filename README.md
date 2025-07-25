@@ -1,4 +1,4 @@
-# anchorage.nvim
+# Markfoldable.nvim
 A simple Neovim plugin for marking folds as opened or closed.
 
 ![Anchorage](https://github.com/user-attachments/assets/6c6321cc-0d14-4bdf-9dca-976d36de2a75)
