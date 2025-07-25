@@ -14,7 +14,7 @@ A simple Neovim plugin for marking folds as opened or closed.
     'kevinhwang91/nvim-ufo',
     dependencies = {
       'kevinhwang91/promise-async',
-      'mitch1000/anchorage.nvim'
+      'mitch1000/markfoldable.nvim'
     },
     config = function ()
       vim.o.foldcolumn = '0' 
