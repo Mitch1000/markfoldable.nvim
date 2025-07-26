@@ -74,51 +74,11 @@ local function MarkFoldable(config)
 
     local is_current = vim.fn.line('.') == lnum
 
-    local is_shifted = ShiftedLine == lnum
-    local is_modded = ModifiedLine == lnum
-
-    local line = vim.fn.getline(lnum)
-    local started = vim.fn.getpos('.')[3] < 4 
-    local ended = vim.fn.getpos('.')[3] >= 4 
-    local has_shifted = CurrentInsert == nil
-
-    if is_shifted and ended then
-      local new_col_pos = vim.fn.getpos('.')[3] - 2 
-      
-      local function Shift()
-        vim.fn.cursor(lnum, new_col_pos)
-      end
-      vim.schedule(Shift)
-      ShiftedLine = nil 
-      CurrentInsert = nil
+    if is_current and lnum == CurrentInsert then
+      return
     end
-
-    -- local is_at_start = vim.fn.getpos('.')[3] < 4 and is_shifted 
-    if is_current and InsertLine ~= lnum and started and not has_shifted then
-      if not IsEmptyLine(lnum) then
-        vim.fn.setline(lnum, '  ' .. line)
-        ModifiedLine = lnum 
-        SpacedLine = lnum
-        ShiftedLine = lnum
-        return
-      end
-    end
-
-    -- if lnum == ModifiedLine and vim.fn.getpos('.')[3] > 1 then
-    --   ResetModifiedLine()
-    --   ModifiedLine = nil
-    -- end
 
     return InsertMarker(lnum - 1, "  ", 0, position, spaces_id, config)
-  end
-
-  if SpacedLine ~= nil then
-    local line = vim.fn.getline(SpacedLine)
-    local new_line = string.gsub(line, "  ", "", 1)
-    vim.fn.setline(SpacedLine, new_line)
-
-    SpacedLine = nil
-    ModifiedLine = nil
   end
 
   for lnum = vim.fn.line('w0'),vim.fn.line('w$'),1 do

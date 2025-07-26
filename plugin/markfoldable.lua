@@ -12,66 +12,112 @@ function AnchorageMarkFoldable()
 end
 
 vim.on_key(function(key)
-  local pressed = string.find(tostring(key), "\xfd") ~= nil
+    local pressed = string.find(tostring(key), "\xfd") ~= nil  
 
   if pressed and vim.api.nvim_get_mode().mode == "n" then
     vim.schedule(AnchorageMarkFoldable)
   end
 end)
 
-SpacedLine = nil
-ModifiedLine = nil
--- to prevent inserting spaces in blank lines
-InsertLine = nil
-AddedEnds = nil 
 CurrentInsert = nil 
+WasNewLine = nil 
+local insert_chars = { "i", "a", "o", "I", "A", "O" }
 
-function ResetSpaceLine()
-  if IsEmptyLine(SpacedLine) then
-    vim.fn.setline(SpacedLine, "")  
-    SpacedLine = nil
+local function isInsertChar(char)
+  for i,v in ipairs(insert_chars) do
+    if char == v then return true end
   end
+
+  return false 
 end
 
-function MoveCursorOnInsert()
-  local line = vim.fn.getline(".")
-  local lnum = vim.fn.line(".")
-  local is_new_line = string.len(line) < 1
-
-  if IsEmptyLine(lnum) then
-    InsertLine = lnum
+function MoveCursorOnInsert(char)
+  if not isInsertChar(char) then
+    return
   end
-  CurrentInsert = lnum
-  
-  if vim.fn.getpos('.')[3] == 1 then
-    local function MoveCursor()
-      if vim.fn.getpos('.')[3] == 1 then
-         --vim.fn.cursor(lnum, '3')
-         vim.fn.setpos('.', {0, lnum, 3, 0})
+  if vim.fn.mode() == "i" then
+    return
+  end
+
+  if CurrentInsert ~= nil then
+    return
+  end
+
+
+  local lnum = vim.fn.line(".")
+
+  if char == "o" then
+    WasNewLine = true
+    local function SetBlank()
+      vim.fn.setline(lnum + 1, '    ')
+
+      local function MoveCursor()
+        vim.fn.cursor(lnum + 1, 3)
       end
+
+      vim.schedule(MoveCursor) 
+
+      CurrentInsert = lnum + 1
+    end
+
+    vim.schedule(SetBlank) 
+
+    return
+  end
+
+  local line = vim.fn.getline(lnum)
+  CurrentInsert = lnum
+  vim.fn.setline(lnum, '  ' .. line .. '  ')
+
+  local col_pos = vim.fn.getpos('.')[3]
+  local new_col_pos = col_pos + 2
+
+  if char == "A" then
+    local function MoveCursor()
+      vim.fn.cursor(lnum, string.len(line) + 3)
     end
     vim.schedule(MoveCursor) 
-    --vim.defer_fn(MoveCursor, 500) 
-  else
-    ResetModifiedLine()
+    return
   end
-end
 
-function ResetModifiedLine()
-  local line = vim.fn.getline(ModifiedLine)
-  local new_line = string.gsub(line, "  ", "", 1)
-  vim.fn.setline(ModifiedLine, new_line)
+  if char ~= "o" then
+    vim.fn.cursor(lnum, new_col_pos)
+  end
 end
 
 function ResetCurrentInsert()
+  local line = vim.fn.getline(CurrentInsert)
+  local start_line = string.sub(line, 3, -1)
+
+
+  local new_line = string.sub(start_line, 1, -3)
+  vim.fn.setline(CurrentInsert, new_line)
+
+  local col_pos = vim.fn.getpos('.')[3]
+  local start_current = CurrentInsert
+
   CurrentInsert = nil
+  local new_pos = col_pos - 2
+  print(new_pos)
+
+  if col_pos >= string.len(line) - 4 then
+    vim.fn.cursor(start_current, col_pos)
+    return 
+  end
+
+  if new_pos > 0 then
+    vim.fn.cursor(start_current, new_pos)
+  end
+
+  if WasNewLine then
+    WasNewLine = false
+    CurrentInsert = nil 
+  end
 end
 
+vim.on_key(MoveCursorOnInsert)
 
 cmd([[autocmd BufRead,BufNewFile, * execute "lua AnchorageMarkFoldable()"]])
-cmd([[autocmd VimLeavePre,BufWritePre * execute "lua ResetModifiedLine()"]])
 cmd([[autocmd BufWrite * execute "lua AnchorageMarkFoldable()"]])
 cmd([[autocmd CursorMoved,CursorMovedI * execute "lua AnchorageMarkFoldable()"]])
-cmd([[autocmd InsertEnter * execute "lua MoveCursorOnInsert()"]])
 cmd([[autocmd InsertLeave * execute "lua ResetCurrentInsert()"]])
-cmd([[autocmd ModeChanged * execute "lua ResetSpaceLine()"]])
