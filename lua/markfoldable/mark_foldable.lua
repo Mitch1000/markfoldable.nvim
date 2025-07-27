@@ -103,22 +103,23 @@ local function MarkFoldable(config)
   end
 
   local line = vim.fn.getline('.')
-  if string.len(line) < 1 and vim.fn.mode() == 'n' then
-    local noCursor = 'a:noCursor'
+  if vim.fn.mode() == 'n' then
+    if string.len(line) < 1 then
+      local noCursor = 'a:noCursor'
 
-    if vim.o.guicursor ~= noCursor then
-      saved_cursor = vim.o.guicursor
+      if vim.o.guicursor ~= noCursor then
+        saved_cursor = vim.o.guicursor
+      end
+
+      vim.o.guicursor = noCursor
+      local higroup_cursor = 'MarkFoldableCursor'
+      local lnum = vim.fn.line('.')
+      InsertMarker(lnum - 1, "  █", 0, "inline", new_line_cursor_id, cursor_config, higroup_cursor)
+    else
+      vim.o.guicursor = saved_cursor
     end
-
-    vim.o.guicursor = noCursor
-    local higroup_cursor = 'MarkFoldableCursor'
-    print(cursor_config.anchor_color)
-    --print(cursor_fg)
-    local lnum = vim.fn.line('.')
-    InsertMarker(lnum - 1, "  █", 0, "inline", new_line_cursor_id, cursor_config, higroup_cursor)
-  else
-    vim.o.guicursor = saved_cursor
   end
+
 
   for lnum = vim.fn.line('w0'),vim.fn.line('w$'),1 do
     SpaceLines(lnum, "inline")
