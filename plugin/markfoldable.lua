@@ -7,20 +7,24 @@ local con = require('markfoldable.config')
 con.set_default_config()
 local config = con.get_config()
 
+vim.api.nvim_set_hl(0, 'noCursor', { reverse = true, blend = 100 })
+vim.cmd([[hi link MarkFoldableCurrentCursor Cursor]])
+vim.cmd([[set guicursor=n-v-c:block-Cursor]])
+
 function AnchorageMarkFoldable()
   require('markfoldable.mark_foldable')(config)
 end
 
 vim.on_key(function(key)
-    local pressed = string.find(tostring(key), "\xfd") ~= nil  
+  local pressed = string.find(tostring(key), "\xfd") ~= nil
 
   if pressed and vim.api.nvim_get_mode().mode == "n" then
     vim.schedule(AnchorageMarkFoldable)
   end
 end)
 
-CurrentInsert = nil 
-WasNewLine = nil 
+CurrentInsert = nil
+WasNewLine = nil
 local insert_chars = { "i", "a", "o", "I", "A", "O" }
 
 local function isInsertChar(char)
@@ -28,7 +32,7 @@ local function isInsertChar(char)
     if char == v then return true end
   end
 
-  return false 
+  return false
 end
 
 function MoveCursorOnInsert(char)
@@ -46,21 +50,25 @@ function MoveCursorOnInsert(char)
 
   local lnum = vim.fn.line(".")
 
+  if IsEmptyLine(lnum) then
+    return
+  end
+
   if char == "o" then
     WasNewLine = true
     local function SetBlank()
       vim.fn.setline(lnum + 1, '    ')
 
       local function MoveCursor()
-        vim.fn.cursor(lnum + 1, 3)
+          vim.fn.cursor(lnum + 1, 3)  
       end
 
-      vim.schedule(MoveCursor) 
+      vim.schedule(MoveCursor)
 
       CurrentInsert = lnum + 1
     end
 
-    vim.schedule(SetBlank) 
+    vim.schedule(SetBlank)
 
     return
   end
@@ -76,7 +84,7 @@ function MoveCursorOnInsert(char)
     local function MoveCursor()
       vim.fn.cursor(lnum, string.len(line) + 3)
     end
-    vim.schedule(MoveCursor) 
+    vim.schedule(MoveCursor)
     return
   end
 
@@ -86,9 +94,12 @@ function MoveCursorOnInsert(char)
 end
 
 function ResetCurrentInsert()
+  if CurrentInsert == nil then
+    return
+  end
   local line = vim.fn.getline(CurrentInsert)
-  local start_line = string.sub(line, 3, -1)
 
+  local start_line = string.sub(line, 3, -1)
 
   local new_line = string.sub(start_line, 1, -3)
   vim.fn.setline(CurrentInsert, new_line)
@@ -98,11 +109,10 @@ function ResetCurrentInsert()
 
   CurrentInsert = nil
   local new_pos = col_pos - 2
-  print(new_pos)
 
   if col_pos >= string.len(line) - 4 then
     vim.fn.cursor(start_current, col_pos)
-    return 
+    return
   end
 
   if new_pos > 0 then
@@ -111,7 +121,7 @@ function ResetCurrentInsert()
 
   if WasNewLine then
     WasNewLine = false
-    CurrentInsert = nil 
+    CurrentInsert = nil
   end
 end
 
