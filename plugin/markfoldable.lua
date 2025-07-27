@@ -6,7 +6,7 @@ local con = require('markfoldable.config')
 
 con.set_default_config()
 local config = con.get_config()
-local saved_cursor = nil
+local saved_cursor = vim.o.guicursor 
 
 vim.api.nvim_set_hl(0, 'noCursor', { reverse = true, blend = 100 })
 vim.cmd([[set guicursor=n-v-c:block-Cursor]])
@@ -28,7 +28,7 @@ local insert_chars = { "i", "a", "o", "I", "A", "O" }
 
 function HandleInsert()
   saved_cursor = vim.o.guicursor
-  vim.o.guicursor = 'a:noCursor'
+--  vim.o.guicursor = 'a:noCursor'
   local lnum = vim.fn.line('.')
   local line = vim.fn.getline(lnum)
   CurrentInsert = lnum
