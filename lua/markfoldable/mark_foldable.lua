@@ -1,5 +1,4 @@
 local vim = vim
-
 local IsEmptyLine = require('markfoldable.helpers.is_empty_line')
 local InsertMarker = require("markfoldable.insert_marker")
 local GetHighlightColor = require("markfoldable.get_highlight_color")
@@ -14,13 +13,11 @@ end
 cursor_config.anchor_color = cursor_bg
 cursor_config.anchor_bg = cursor_fg
 
-
 local spaces_id = vim.api.nvim_create_namespace('markfoldable_folder_spaces')
 local arrow_id = vim.api.nvim_create_namespace('markfoldable_folder_ids')
 local new_line_cursor_id = vim.api.nvim_create_namespace('markfoldable_new_line_cursor')
 
-local ShiftedLine = nil
-local saved_cursor = nil
+local saved_cursor = vim.o.guicursor
 
 local function GetIsOpen(lnum)
   local total_lines = vim.fn.line('$')
@@ -92,21 +89,6 @@ local function MarkFoldable(config)
     if lnum <= 0 then return end
     if lnum > vim.fn.line('w$') then return end
     local is_current = vim.fn.line('.') == lnum
-    if is_current and CurrentInsert ~= lnum then
-      local line = vim.fn.getline('.')
-      if string.len(line) < 1 then
-        ShiftedLine = lnum
-        -- vim.fn.setline(lnum, '--' .. line)
-        --
-        saved_cursor = vim.o.guicursor
-
-        vim.o.guicursor = 'a:noCursor'
-        local higroup_cursor = 'MarkFoldableCursor'
-        print(cursor_config.anchor_color)
-        --print(cursor_fg)
-        InsertMarker(lnum - 1, "  █", 0, "inline", new_line_cursor_id, cursor_config, higroup_cursor)
-      end
-    end
 
     if is_current and lnum == CurrentInsert then
       return
@@ -120,12 +102,21 @@ local function MarkFoldable(config)
     MarkLines(lnum)
   end
 
-  if ShiftedLine ~= nil then
-    -- local line = vim.fn.getline(ShiftedLine)
-    -- local new_line = string.gsub(line, [[-]], "")
-      -- vim.fn.setline(ShiftedLine, new_line)  
-    ShiftedLine = nil
+  local line = vim.fn.getline('.')
+  if string.len(line) < 1 and vim.fn.mode() == 'n' then
+    local noCursor = 'a:noCursor'
 
+    if vim.o.guicursor ~= noCursor then
+      saved_cursor = vim.o.guicursor
+    end
+
+    vim.o.guicursor = noCursor
+    local higroup_cursor = 'MarkFoldableCursor'
+    print(cursor_config.anchor_color)
+    --print(cursor_fg)
+    local lnum = vim.fn.line('.')
+    InsertMarker(lnum - 1, "  █", 0, "inline", new_line_cursor_id, cursor_config, higroup_cursor)
+  else
     vim.o.guicursor = saved_cursor
   end
 
@@ -136,11 +127,11 @@ end
 
 local hasErrored = false
 
+
 return function(config)
   if (hasErrored == true) then return end
 
-  -- local status, result = pcall(MarkFoldable, config)
-  MarkFoldable(config)
+  local status, result = pcall(MarkFoldable, config)
 
   if not status then
     hasErrored = true
