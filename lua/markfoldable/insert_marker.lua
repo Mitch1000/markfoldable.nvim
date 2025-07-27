@@ -8,7 +8,7 @@ if (string.len(background) <= 0) then
   background = 'NONE'
 end
 
-local function InsertMarker(lineNumber, char, col, position, ns_id, config, is_open)
+local function InsertMarker(lineNumber, char, col, position, ns_id, config, is_open, mygroup)
   local bg = config.anchor_bg
   local fg = config.anchor_color
 
@@ -39,12 +39,17 @@ local function InsertMarker(lineNumber, char, col, position, ns_id, config, is_o
   if is_open then higroup = 'AnchorageAccordianMarkerOpen' end
   if is_current then higroup = 'AnchorageAccordianMarkerCurrent' end
 
+  higroup = mygroup or higroup  
+
+
   local hilight = [[hi ]] .. higroup .. [[ guifg=]] .. fg .. [[ guibg=]] .. guibg
   if string.len(gui) > 0 then
     hilight = hilight .. [[ gui=]] .. gui
   end
 
-  vim.cmd(hilight)
+  if type(mygroup) ~= 'string' then
+    vim.cmd(hilight)
+  end
 
   local api = vim.api
   local bnr = vim.fn.bufnr('%')
