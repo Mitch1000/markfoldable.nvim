@@ -19,6 +19,10 @@ function M.set_default_config()
   _AnchorageConfigurationOptions = default_config
 end
 
+function M.get_default_config()
+  return default_config
+end
+
 function M.set_config(config)
   for k, v in pairs(config) do
     _AnchorageConfigurationOptions[k] = v
