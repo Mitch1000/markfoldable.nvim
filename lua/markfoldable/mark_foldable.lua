@@ -2,20 +2,23 @@ local vim = vim
 local IsEmptyLine = require('markfoldable.helpers.is_empty_line')
 local InsertMarker = require("markfoldable.insert_marker")
 local GetHighlightColor = require("markfoldable.get_highlight_color")
-local cursor_fg = GetHighlightColor("Cursor", "guifg")
-local cursor_bg = GetHighlightColor("Cursor", "guibg")
+local cursor_fg = GetHighlightColor("Cursor", "guibg")
+local cursor_bg = GetHighlightColor("CursorLine", "guibg")
 local default_config = require('markfoldable.config').get_default_config()
 local cursor_config = {}
+
 for k,v in pairs(default_config) do
   cursor_config[k] = v
 end
 
-cursor_config.anchor_color = cursor_bg
-cursor_config.anchor_bg = cursor_fg
+cursor_config.anchor_color = cursor_fg
+cursor_config.anchor_bg = cursor_bg
 
 local spaces_id = vim.api.nvim_create_namespace('markfoldable_folder_spaces')
 local arrow_id = vim.api.nvim_create_namespace('markfoldable_folder_ids')
 local new_line_cursor_id = vim.api.nvim_create_namespace('markfoldable_new_line_cursor')
+local new_line_cursor_lnum = nil
+local current_buff_length = nil
 
 local saved_cursor = vim.o.guicursor
 
@@ -50,18 +53,23 @@ local function IsMarked(lnum)
   return true
 end
 
-local function ClearVirtualText()
+function ClearVirtualText()
+  local line_start = vim.fn.line('w0')
+  local line_end = vim.fn.line('w$')
   local bnr = vim.fn.bufnr('%')
-  vim.api.nvim_buf_clear_namespace(bnr, spaces_id, 0, vim.fn.line('$'))
-  vim.api.nvim_buf_clear_namespace(bnr, spaces_id, 0, vim.fn.line('$'))
-  vim.api.nvim_buf_clear_namespace(bnr, arrow_id, 0, vim.fn.line('$'))
-  vim.api.nvim_buf_clear_namespace(bnr, arrow_id, 0, vim.fn.line('$'))
-  vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, 0, vim.fn.line('$'))
-  vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, 0, vim.fn.line('$'))
+  vim.api.nvim_buf_clear_namespace(bnr, spaces_id, line_start, line_end)
+  vim.api.nvim_buf_clear_namespace(bnr, arrow_id, line_start, line_end)
+  vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, line_start, line_end)
 end
 
 local function MarkFoldable(config)
-  ClearVirtualText()
+  local buff_len = vim.fn.line('$')
+  if current_buff_length ~= buff_len then
+    ClearVirtualText()
+  end
+
+  current_buff_length = buff_len
+
   -- local open_marker = ""
   local open_marker = config.opened_icon
   local closed_marker = config.closed_icon
@@ -90,8 +98,13 @@ local function MarkFoldable(config)
     if lnum > vim.fn.line('w$') then return end
     local is_current = vim.fn.line('.') == lnum
 
-    if is_current and lnum == CurrentInsert then
-      return
+    if is_current and lnum == CurrentInsert.lnum then
+      if CurrentInsert.buffer_id ~= vim.fn.bufnr('%') then
+        CurrentInsert = { lnum = nil, buffer_id = nil }
+      else
+        print(CurrentInsert.lnum)
+        return
+      end
     end
 
     local higroup = 'MarkFoldableMarkerSpacer'
@@ -104,8 +117,15 @@ local function MarkFoldable(config)
 
   local line = vim.fn.getline('.')
   if vim.fn.mode() == 'n' then
+    local bnr = vim.fn.bufnr('%')
+
+    if new_line_cursor_lnum ~= nil then
+      vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, new_line_cursor_lnum - 1, new_line_cursor_lnum)
+    end
+
     if string.len(line) < 1 then
       local noCursor = 'a:noCursor'
+
 
       if vim.o.guicursor ~= noCursor then
         saved_cursor = vim.o.guicursor
@@ -114,12 +134,13 @@ local function MarkFoldable(config)
       vim.o.guicursor = noCursor
       local higroup_cursor = 'MarkFoldableCursor'
       local lnum = vim.fn.line('.')
+      new_line_cursor_lnum = lnum
       InsertMarker(lnum - 1, "  █", 0, "inline", new_line_cursor_id, cursor_config, higroup_cursor)
     else
+      new_line_cursor_lnum = nil
       vim.o.guicursor = saved_cursor
     end
   end
-
 
   for lnum = vim.fn.line('w0'),vim.fn.line('w$'),1 do
     SpaceLines(lnum, "inline")
@@ -127,7 +148,6 @@ local function MarkFoldable(config)
 end
 
 local hasErrored = false
-
 
 return function(config)
   if (hasErrored == true) then return end
