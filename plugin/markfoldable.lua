@@ -24,10 +24,16 @@ vim.on_key(function(key)
   end
 end)
 
-CurrentInsert = nil
-local insert_chars = { "i", "a", "o", "I", "A", "O" }
+
+local function get_def_ins()
+  return { lnum = nil, buffer_id = nil }
+end
+
+CurrentInsert = get_def_ins()
+-- local insert_chars = { "i", "a", "o", "I", "A", "O" }
 
 function HandleInsert()
+  ClearVirtualText()
   local noCursor = 'a:noCursor'
 
   if vim.o.guicursor ~= noCursor then
@@ -38,7 +44,8 @@ function HandleInsert()
 
   local lnum = vim.fn.line('.')
   local line = vim.fn.getline(lnum)
-  CurrentInsert = lnum
+  CurrentInsert.lnum = lnum
+  CurrentInsert.buffer_id = vim.fn.bufnr('%')
   vim.fn.setline(lnum, '  ' .. line)
 
   local col_pos = vim.fn.getpos('.')[3]
@@ -51,26 +58,34 @@ function HandleInsert()
 end
 
 function ResetCurrentInsert()
-  if CurrentInsert == nil then
+  if CurrentInsert.lnum == nil then
+    CurrentInsert = get_def_ins()
     return
   end
-  local line = vim.fn.getline(CurrentInsert)
+
+  if CurrentInsert.buffer_id ~= vim.fn.bufnr('%') then
+    CurrentInsert = get_def_ins()
+    return
+  end
+
+  local line = vim.fn.getline(CurrentInsert.lnum)
 
   local start_line = string.sub(line, 3, -1)
 
-  vim.fn.setline(CurrentInsert, start_line)
+  vim.fn.setline(CurrentInsert.lnum, start_line)
 
   local col_pos = vim.fn.getpos('.')[3]
   local start_current = CurrentInsert
 
-  CurrentInsert = nil
+  CurrentInsert = get_def_ins()
   local new_pos = col_pos - 2
 
-  vim.fn.cursor(start_current, new_pos)
+  vim.fn.cursor(start_current.lnum, new_pos)
 end
 
-cmd([[autocmd BufRead,BufNewFile, * execute "lua AnchorageMarkFoldable()"]])
-cmd([[autocmd BufWrite * execute "lua AnchorageMarkFoldable()"]])
+  cmd([[autocmd BufRead,BufNewFile, * execute "lua AnchorageMarkFoldable()"]])
+-- cmd([[autocmd BufWrite * execute "lua AnchorageMarkFoldable()"]])
 cmd([[autocmd CursorMoved,CursorMovedI * execute "lua AnchorageMarkFoldable()"]])
 cmd([[autocmd InsertLeave * execute "lua ResetCurrentInsert()"]])
 cmd([[autocmd InsertEnter * execute "lua HandleInsert()"]])
+
