@@ -37,13 +37,27 @@ end
 
 cursor_config.anchor_color = cursor_fg
 cursor_config.anchor_bg = cursor_bg
+cursor_config.blend = 50
 -- End Locals
 
 
 vim.api.nvim_set_hl(0, 'noCursor', { reverse = true, blend = 100 })
-vim.cmd([[set guicursor=n-v-c:block-Cursor]])
+-- vim.cmd([[set guicursor=n-v-c:block-Cursor]])
+function HighlightRange(start_line, start_col, end_line, end_col)
+  vim.api.nvim_buf_set_extmark(
+    0, -- Buffer number (0 for current buffer)
+    new_line_cursor_id, -- Namespace (0 for default)
+    start_line, -- 0-indexed start line
+    start_col, -- 0-indexed start column
+    {
+      end_row = end_line, -- 0-indexed end line
+      end_col = end_col, -- 0-indexed end column
+      hl_group = "Cursor" -- Name of your custom highlight group
+    }
+  )
+end
 
-function ClearCursorText()
+local function ClearCursorText()
   local line_start = vim.fn.line('w0')
   local line_end = vim.fn.line('w$')
   local bnr = vim.fn.bufnr('%')
@@ -72,6 +86,7 @@ end
 local function HandleNormal()
   local line = vim.fn.getline('.')
   local bnr = vim.fn.bufnr('%')
+  ClearCursorText()
 
   if new_line_cursor_lnum ~= nil then
     vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, new_line_cursor_lnum - 1, new_line_cursor_lnum)
@@ -93,7 +108,6 @@ local function HandleNormal()
   else
     new_line_cursor_lnum = nil
     vim.o.guicursor = saved_cursor
-    ClearCursorText()
   end
 end
 
@@ -109,23 +123,30 @@ local function HandleInsert()
 
 
   local lnum = vim.fn.line('.')
-  local col_pos = vim.fn.getpos('.')[3]
 
 
   local InsertMarker = require("markfoldable.insert_marker")
 
+  local col_pos = vim.fn.getpos('.')[3]
   local function ShiftCursor()
-    -- local line = vim.fn.getline(lnum)
-    -- local line_length = string.len(line)
-    -- local add = line_length - start
-    -- local position = math.min(col_pos + 1 + add, line_length)
-    -- local marker = line_length > 0 and "█" or "  █"
-    -- InsertMarker(lnum - 1, marker, position, "overlay", new_line_cursor_id, cursor_config, higroup_cursor)
+    local cursor_pos = vim.fn.getpos('.')[3]
+    if cursor_pos < 2 then
+      vim.o.guicursor = noCursor
+      local line = vim.fn.getline(lnum)
+      local line_length = string.len(line)
+      if line_length > 0  then
+        HighlightRange(lnum - 1, 0, lnum - 1, 1)
+      end
+    else
+      vim.o.guicursor = saved_cursor
+    end
   end
 
-  if col_pos < 5 then
-    -- vim.o.guicursor = noCursor
+  if col_pos < 2 then
+    vim.o.guicursor = noCursor
     vim.schedule(ShiftCursor)
+  else
+    vim.o.guicursor = saved_cursor
   end
 
   local function Shift()
@@ -140,8 +161,6 @@ function SetMode()
   PreviousMode = CurrentMode
 
   CurrentMode = vim.fn.mode()
-
-  --local col_pos = vim.fn.getpos('.')[3]
 
   if CurrentMode == 'i' then
     ClearSpaces()
@@ -164,24 +183,17 @@ function SetMode()
     end
     vim.schedule(Clear)
   end
-
+  if CurrentMode == 'n' then
+    vim.schedule(HandleNormal)
+  end
 end
 
 function AnchorageMarkFoldable()
-  -- if get_is_in_menu() then return end
   require('markfoldable.mark_foldable')(config)
 end
 
 
 vim.on_key(function(key)
---  if CurrentMode == 'i' then
---    for _,v in ipairs(vim.api.nvim_list_wins()) do
---      if vim.api.nvim_win_get_config(v).relative ~= '' then
---        MPrint(vim.api.nvim_win_get_config(v).relative)
---      end
---    end
---  end
-
   if get_is_in_menu() then return end
 
   local pressed = string.find(tostring(key), "\xfd") ~= nil
