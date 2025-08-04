@@ -62,7 +62,26 @@ function ClearVirtualText()
   vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, line_start, line_end)
 end
 
+function ClearFoldMarks()
+  local line_start = vim.fn.line('w0')
+  local line_end = vim.fn.line('w$')
+  local bnr = vim.fn.bufnr('%')
+  vim.api.nvim_buf_clear_namespace(bnr, arrow_id, line_start, line_end)
+end
+
+function ClearCursorText()
+  local line_start = vim.fn.line('w0')
+  local line_end = vim.fn.line('w$')
+  local bnr = vim.fn.bufnr('%')
+  vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, line_start, line_end)
+end
+
+
 local function MarkFoldable(config)
+  if CurrentMode == 'i' then
+    return
+  end
+
   local buff_len = vim.fn.line('$')
   if current_buff_length ~= buff_len then
     ClearVirtualText()
@@ -76,33 +95,42 @@ local function MarkFoldable(config)
   local closed_folds_lnums = {}
     -- Define the fold expression func  
 
-  local function MarkLines(lnum)
-    if (lnum == 0) then return end
-    if (IsEmptyLine(lnum)) then return end
+local function MarkFold(lnum)
+  if (lnum == 0) then return end
+  if (IsEmptyLine(lnum)) then return end
 
-    if not IsMarked(lnum) then return end
+  if not IsMarked(lnum) then return end
 
-    local is_open = GetIsOpen(lnum)
+  local is_open = GetIsOpen(lnum)
 
-    if is_open then table.insert(closed_folds_lnums, lnum) end
-    local mark = is_open and open_marker or closed_marker
+  if is_open then table.insert(closed_folds_lnums, lnum) end
+  local mark = is_open and open_marker or closed_marker
 
-    local higroup = 'AnchorageAccordianMarkerClosed'
-    if is_open then higroup = 'AnchorageAccordianMarkerOpen' end
+  local higroup = 'AnchorageAccordianMarkerClosed'
+  if is_open then higroup = 'AnchorageAccordianMarkerOpen' end
 
-    InsertMarker(lnum - 1, mark, 0, "overlay", arrow_id, config, higroup)
+  InsertMarker(lnum - 1, mark, 0, "overlay", arrow_id, config, higroup)
  end
+
+ function MarkFolds()
+   for lnum = vim.fn.line('w0'),vim.fn.line('w$'),1 do
+     MarkFold(lnum)
+   end
+ end
+
 
   local function SpaceLines(lnum, position)
     if lnum <= 0 then return end
     if lnum > vim.fn.line('w$') then return end
     local is_current = vim.fn.line('.') == lnum
 
-    if is_current and lnum == CurrentInsert.lnum then
-      if CurrentInsert.buffer_id ~= vim.fn.bufnr('%') then
-        CurrentInsert = { lnum = nil, buffer_id = nil }
+    -- for handling buffer switching
+    if is_spaced(lnum) then
+      MPrint(lnum)
+      if CurrentlySpacedLines.insert[1].buffer_id ~= vim.fn.bufnr('%') then
+        CurrentlySpacedLines.insert[1] = { lnum = nil, buffer_id = nil }
+        -- CurrentlySpacedLines.visual = {}
       else
-        print(CurrentInsert.lnum)
         return
       end
     end
@@ -111,12 +139,11 @@ local function MarkFoldable(config)
     return InsertMarker(lnum - 1, "  ", 0, position, spaces_id, config, higroup)
   end
 
-  for lnum = vim.fn.line('w0'),vim.fn.line('w$'),1 do
-    MarkLines(lnum)
-  end
+  MarkFolds()
 
   local line = vim.fn.getline('.')
-  if vim.fn.mode() == 'n' then
+  -- Handle cursor positon for empty lines 
+  if CurrentMode == 'n' then
     local bnr = vim.fn.bufnr('%')
 
     if new_line_cursor_lnum ~= nil then
@@ -152,10 +179,11 @@ local hasErrored = false
 return function(config)
   if (hasErrored == true) then return end
 
-  local status, result = pcall(MarkFoldable, config)
+  -- local status, result = pcall(MarkFoldable, config)
+  return MarkFoldable(config)
 
-  if not status then
-    hasErrored = true
-  end
-  return result
+--  if not status then
+--    hasErrored = true
+--  end
+--  return result
 end
