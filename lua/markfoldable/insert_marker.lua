@@ -25,14 +25,13 @@ local function InsertMarker(lineNumber, char, col, position, ns_id, config, is_o
     fg = config.anchor_cursor_color
   end
 
-
   local gui = ""
 
   if config.italic then gui = gui .. "italic," end
   if config.bold then gui = gui .. "bold," end
   if config.underline then gui = gui .. "underline," end
   if config.undercurl then gui = gui .. "undercurl," end
-  local guibg = bg or background
+  local guibg = string.len(bg) > 0 and bg or background
 
   local higroup = 'AnchorageMarkerSpacer'
 

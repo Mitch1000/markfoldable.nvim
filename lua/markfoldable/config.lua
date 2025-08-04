@@ -8,7 +8,7 @@ local default_config = {
   closed_icon = '',
   anchor_color = "#5f5f5f",
   anchor_cursor_color = "#7c7c7c",
-  anchor_bg = nil,
+  anchor_bg = "",
   bold = false,
   italic = false,
   underline = false,
@@ -17,6 +17,10 @@ local default_config = {
 
 function M.set_default_config()
   _AnchorageConfigurationOptions = default_config
+end
+
+function M.get_default_config()
+  return default_config
 end
 
 function M.set_config(config)
