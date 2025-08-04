@@ -1,15 +1,19 @@
 local vim = vim
 
-local GetHighlightColor = require('markfoldable.get_highlight_color')
+local get_highlight_color = require('markfoldable.get_highlight_color')
 
-local background = GetHighlightColor('Normal', 'guibg')
+local function get_background()
+  local background = get_highlight_color('Normal', 'guibg')
 
-if (string.len(background) <= 0) then
-  background = 'NONE'
+  if (string.len(background) <= 0) then
+    background = 'NONE'
+  end
+
+  return background
 end
 
-
 local function InsertMarker(lineNumber, char, col, position, ns_id, config, higroup)
+  local background = get_background()
   local bg = config.anchor_bg
   local fg = config.anchor_color
 
