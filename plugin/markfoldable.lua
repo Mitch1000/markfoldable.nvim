@@ -22,6 +22,13 @@ PreviousMode = 'n'
 
 -- Locals
 local saved_cursor = vim.o.guicursor
+local default_config = require('markfoldable.config').get_default_config()
+local cursor_config = {}
+local GetHighlightColor = require("markfoldable.get_highlight_color")
+local cursor_fg = GetHighlightColor("Cursor", "guibg")
+local cursor_bg = GetHighlightColor("CursorLine", "guibg")
+local higroup_cursor = 'MarkFoldableCursor'
+local insert_space_id = vim.api.nvim_create_namespace('markfoldable_insert_space')
 
 vim.api.nvim_set_hl(0, 'noCursor', { reverse = true, blend = 100 })
 vim.cmd([[set guicursor=n-v-c:block-Cursor]])
@@ -60,11 +67,6 @@ local function HandleInsert()
   local lnum = vim.fn.line('.')
   local col_pos = vim.fn.getpos('.')[3]
 
-  local default_config = require('markfoldable.config').get_default_config()
-  local cursor_config = {}
-  local GetHighlightColor = require("markfoldable.get_highlight_color")
-  local cursor_fg = GetHighlightColor("Cursor", "guibg")
-  local cursor_bg = GetHighlightColor("CursorLine", "guibg")
 
   for k,v in pairs(default_config) do
     cursor_config[k] = v
@@ -73,7 +75,6 @@ local function HandleInsert()
   cursor_config.anchor_color = cursor_fg
   cursor_config.anchor_bg = cursor_bg
 
-  local higroup_cursor = 'MarkFoldableCursor'
 
   local InsertMarker = require("markfoldable.insert_marker")
 
@@ -95,9 +96,10 @@ local function HandleInsert()
   end
 
   local function Shift()
-    InsertMarker(lnum - 1, "  ", 0, "inline", new_line_cursor_id, cursor_config, higroup_cursor)
+    InsertMarker(lnum - 1, "  ", 0, "inline", insert_space_id, cursor_config, higroup_cursor)
   end
   vim.schedule(Shift)
+
 end
 
 function SetMode()
@@ -119,6 +121,13 @@ function SetMode()
   if PreviousMode == 'i' then
     local function Clear()
       ClearCursorText()
+      local line_start = vim.fn.line('w0')
+      local line_end = vim.fn.line('w$')
+      local bnr = vim.fn.bufnr('%')
+      vim.api.nvim_buf_clear_namespace(bnr, insert_space_id, line_start, line_end)
+
+      ClearSpaces()
+      SpaceLines(config)
       vim.o.guicursor = saved_cursor
     end
     vim.schedule(Clear)
