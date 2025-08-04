@@ -20,7 +20,8 @@ CurrentMode = 'n'
 PreviousMode = 'n'
 
 -- Locals
-local saved_cursor = vim.o.guicursor
+-- local saved_cursor = vim.o.guicursor
+local saved_cursor = [[i:block]]
 local default_config = require('markfoldable.config').get_default_config()
 local cursor_config = {}
 local GetHighlightColor = require("markfoldable.get_highlight_color")
@@ -94,7 +95,6 @@ local function HandleNormal()
 
   if string.len(line) < 1 then
     local noCursor = 'a:noCursor'
-
 
     if vim.o.guicursor ~= noCursor then
       saved_cursor = vim.o.guicursor
