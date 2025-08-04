@@ -2,7 +2,6 @@ local vim = vim
 local cmd = vim.cmd
 
 --vim.api.nvim_set_hl(0, 'MarkFoldableCursor', { link = "Cursor" })
-vim.api.nvim_set_hl(0, 'MarkFoldableCursor', { fg = 'red', bg = 'blue' })
 
 local con = require('markfoldable.config')
 con.set_default_config()
@@ -29,14 +28,32 @@ local cursor_fg = GetHighlightColor("Cursor", "guibg")
 local cursor_bg = GetHighlightColor("CursorLine", "guibg")
 local higroup_cursor = 'MarkFoldableCursor'
 local insert_space_id = vim.api.nvim_create_namespace('markfoldable_insert_space')
+local new_line_cursor_lnum = nil
+local new_line_cursor_id = vim.api.nvim_create_namespace('markfoldable_new_line_cursor')
+
+for k,v in pairs(default_config) do
+  cursor_config[k] = v
+end
+
+cursor_config.anchor_color = cursor_fg
+cursor_config.anchor_bg = cursor_bg
+-- End Locals
+
 
 vim.api.nvim_set_hl(0, 'noCursor', { reverse = true, blend = 100 })
 vim.cmd([[set guicursor=n-v-c:block-Cursor]])
 
+function ClearCursorText()
+  local line_start = vim.fn.line('w0')
+  local line_end = vim.fn.line('w$')
+  local bnr = vim.fn.bufnr('%')
+  vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, line_start, line_end)
+end
+
 local function get_is_in_menu()
   local win_id = vim.api.nvim_get_current_win()
   if vim.api.nvim_win_get_config(win_id).relative ~= '' then
-    return true 
+    return true
   end
 
   if vim.fn.pumvisible() ~= 0 then
@@ -52,6 +69,34 @@ local function get_is_in_menu()
   return false
 end
 
+local function HandleNormal()
+  local line = vim.fn.getline('.')
+  local bnr = vim.fn.bufnr('%')
+
+  if new_line_cursor_lnum ~= nil then
+    vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, new_line_cursor_lnum - 1, new_line_cursor_lnum)
+  end
+
+  if string.len(line) < 1 then
+    local noCursor = 'a:noCursor'
+
+
+    if vim.o.guicursor ~= noCursor then
+      saved_cursor = vim.o.guicursor
+    end
+
+    vim.o.guicursor = noCursor
+    local lnum = vim.fn.line('.')
+    --local new_line_cursor_lnum = lnum
+    local InsertMarker = require("markfoldable.insert_marker")
+    InsertMarker(lnum - 1, "  █", 0, "overlay", new_line_cursor_id, cursor_config, higroup_cursor)
+  else
+    new_line_cursor_lnum = nil
+    vim.o.guicursor = saved_cursor
+    ClearCursorText()
+  end
+end
+
 -- TODO: Prevent deleting behind line number spaces in insert mode
 local function HandleInsert()
   ClearCursorText()
@@ -63,35 +108,23 @@ local function HandleInsert()
   end
 
 
-
   local lnum = vim.fn.line('.')
   local col_pos = vim.fn.getpos('.')[3]
-
-
-  for k,v in pairs(default_config) do
-    cursor_config[k] = v
-  end
-
-  cursor_config.anchor_color = cursor_fg
-  cursor_config.anchor_bg = cursor_bg
 
 
   local InsertMarker = require("markfoldable.insert_marker")
 
   local function ShiftCursor()
-    --local pos = vim.fn.getpos('.')
-    --MPrint(pos[1] .. " " .. pos[2] .. " " .. pos[3] .. " " .. pos[4])
-    -- MPrint(col_pos)
-
-    local line = vim.fn.getline(lnum)
-    local line_length = string.len(line)
-    local position = math.min(col_pos + 1, line_length)
-    local marker = line_length > 0 and "█" or "  █"
-    InsertMarker(lnum - 1, marker, position, "overlay", new_line_cursor_id, cursor_config, higroup_cursor)
+    -- local line = vim.fn.getline(lnum)
+    -- local line_length = string.len(line)
+    -- local add = line_length - start
+    -- local position = math.min(col_pos + 1 + add, line_length)
+    -- local marker = line_length > 0 and "█" or "  █"
+    -- InsertMarker(lnum - 1, marker, position, "overlay", new_line_cursor_id, cursor_config, higroup_cursor)
   end
 
-  if col_pos < 2 then
-    vim.o.guicursor = noCursor
+  if col_pos < 5 then
+    -- vim.o.guicursor = noCursor
     vim.schedule(ShiftCursor)
   end
 
@@ -99,7 +132,6 @@ local function HandleInsert()
     InsertMarker(lnum - 1, "  ", 0, "inline", insert_space_id, cursor_config, higroup_cursor)
   end
   vim.schedule(Shift)
-
 end
 
 function SetMode()
@@ -132,6 +164,7 @@ function SetMode()
     end
     vim.schedule(Clear)
   end
+
 end
 
 function AnchorageMarkFoldable()
@@ -159,12 +192,18 @@ vim.on_key(function(key)
   if CurrentMode == 'i' then
     HandleInsert()
   end
+
+  -- Handle cursor positon for empty lines
+  if CurrentMode == 'n' then
+    vim.schedule(HandleNormal)
+  end
 end)
+
 
 -- Update fold marks on text change
 function TextChanged()
   if get_is_in_menu() then return end
-  ClearFoldMarks()
+  ClearCursorText()
   MarkFolds()
 end
 
