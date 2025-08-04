@@ -43,8 +43,10 @@ cursor_config.blend = 50
 
 
 vim.api.nvim_set_hl(0, 'noCursor', { reverse = true, blend = 100 })
+
 -- vim.cmd([[set guicursor=n-v-c:block-Cursor]])
-function HighlightRange(start_line, start_col, end_line, end_col)
+--
+local function HighlightRange(start_line, start_col, end_line, end_col)
   vim.api.nvim_buf_set_extmark(
     0, -- Buffer number (0 for current buffer)
     new_line_cursor_id, -- Namespace (0 for default)
@@ -211,12 +213,15 @@ vim.on_key(function(key)
   end
 end)
 
-
 -- Update fold marks on text change
 function TextChanged()
+  if CurrentMode == 'n' then
+    vim.schedule(HandleNormal)
+  end
   if get_is_in_menu() then return end
   ClearCursorText()
   MarkFolds()
+
 end
 
 --require('markfoldable.mark_foldable')(config)
