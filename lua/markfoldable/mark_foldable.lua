@@ -19,7 +19,9 @@ local function space_line(lnum, position, config)
   if lnum > vim.fn.line('w$') then return end
   local is_current = vim.fn.line('.') == lnum
 
-  if is_current and CurrentMode == 'i' then return end
+  if is_current and CurrentMode == 'i' then
+    return
+  end
 
   local higroup = 'MarkFoldableMarkerSpacer'
   return InsertMarker(lnum - 1, "  ", 0, position, spaces_id, config, higroup)
@@ -44,26 +46,26 @@ end
 
 ----------------------- Exported Functions -----------------------------------
 local function space_lines(config)
-  for lnum = vim.fn.line('w0'),vim.fn.line('w$'),1 do
+  for lnum = vim.fn.line('w0') - 1,vim.fn.line('w$'),1 do
     space_line(lnum, "inline", config)
   end
 end
 
 local function mark_folds()
-  for lnum = vim.fn.line('w0'),vim.fn.line('w$'),1 do
+  for lnum = vim.fn.line('w0') - 1,vim.fn.line('w$'),1 do
     mark_fold(lnum)
   end
 end
 
 local function clear_spaces()
-  local line_start = vim.fn.line('w0')
+  local line_start = vim.fn.line('w0') - 1
   local line_end = vim.fn.line('w$')
   local bnr = vim.fn.bufnr('%')
   vim.api.nvim_buf_clear_namespace(bnr, spaces_id, line_start, line_end)
 end
 
 local function clear_fold_marks()
-  local line_start = vim.fn.line('w0')
+  local line_start = vim.fn.line('w0') - 1
   local line_end = vim.fn.line('w$')
   local bnr = vim.fn.bufnr('%')
   vim.api.nvim_buf_clear_namespace(bnr, arrow_id, line_start, line_end)
