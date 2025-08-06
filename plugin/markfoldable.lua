@@ -148,6 +148,7 @@ local function handle_insert_mode()
   handle_empty_line(lnum)
 
   local col_pos = vim.fn.getpos('.')[3]
+
   local function shiftcursor()
     local cursor_pos = vim.fn.getpos('.')[3]
     if cursor_pos < 2 then
@@ -169,12 +170,13 @@ local function handle_insert_mode()
     vim.o.guicursor = saved_cursor
   end
 
-  local function shift()
+  local function shift(shift_lnum)
     -- To prevent first character from jumping when writing in at in insert mode
-    InsertMarker(lnum - 1, "  ", 0, "overlay", insert_space_overlay_id, get_cursor_config(), higroup_cursor)
-    InsertMarker(lnum - 1, "  ", 0, "inline", insert_space_id, get_cursor_config(), higroup_cursor)
+    InsertMarker(shift_lnum - 1, "  ", 0, "overlay", insert_space_overlay_id, get_cursor_config(), higroup_cursor)
+    InsertMarker(shift_lnum - 1, "  ", 0, "inline", insert_space_id, get_cursor_config(), higroup_cursor)
   end
-  shift()
+
+  shift(lnum)
 end
 
 --------- Trigger on auto commands -----------
@@ -192,7 +194,7 @@ function _MarkFoldableAuCommandModeChange()
     return
   end
 
-  if PreviousMode == 'i' then
+  if PreviousMode == 'i' and CurrentMode == 'n' then
     local function clear()
       clear_current_line_space()
       handle_empty_line(vim.fn.line('.'))
@@ -234,6 +236,7 @@ function _MarkFoldableAuCommandBufRead()
   if CurrentMode == 'i' then
     vim.schedule(handle_insert_mode)
   end
+
   if CurrentMode == 'n' then
     handle_normal_mode()
   end
