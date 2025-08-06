@@ -5,6 +5,7 @@ local cmd = vim.cmd
 local con = require('markfoldable.config')
 
 con.set_default_config()
+
 local config = con.get_config()
 
 function MPrint(error)
@@ -17,6 +18,7 @@ PreviousMode = vim.fn.mode()
 -- Locals
 -- local saved_cursor = vim.o.guicursor
 local clear_spaces = require('markfoldable.mark_foldable').clear_spaces
+local clear_fold_marks = require('markfoldable.mark_foldable').clear_fold_marks
 local space_lines = require('markfoldable.mark_foldable').space_lines
 local mark_folds = require('markfoldable.mark_foldable').mark_folds
 local default_config = require('markfoldable.config').get_default_config()
@@ -27,7 +29,7 @@ local write_virtual_text = require('markfoldable.mark_foldable').write_virtual_t
 local saved_cursor = [[i:block]]
 
 local higroup_cursor = 'MarkFoldableCursor'
-
+local current_buff_length = nil
 local insert_space_id = vim.api.nvim_create_namespace('markfoldable_insert_space')
 local insert_space_overlay_id = vim.api.nvim_create_namespace('markfoldable_insert_space_overlay')
 local new_line_cursor_lnum = nil
@@ -35,6 +37,7 @@ local new_line_cursor_id = vim.api.nvim_create_namespace('markfoldable_new_line_
 local noCursor = 'a:noCursor'
 
 local cursor_config = {}
+
 for k,v in pairs(default_config) do
   cursor_config[k] = v
 end
@@ -47,7 +50,6 @@ local function get_cursor_config()
   cursor_config.anchor_bg = cursor_bg
   return cursor_config
 end
-
 
 -- End Locals
 vim.api.nvim_set_hl(0, 'noCursor', { reverse = true, blend = 100 })
@@ -120,7 +122,7 @@ local function handle_empty_line(lnum)
     if string.len(line) < 1 then
       hide_cursor()
       --local new_line_cursor_lnum = lnum
-    InsertMarker(lnum - 1, "  █", 0, "overlay", new_line_cursor_id, get_cursor_config(), higroup_cursor)
+      InsertMarker(lnum - 1, "  █", 0, "overlay", new_line_cursor_id, get_cursor_config(), higroup_cursor)
     else
       new_line_cursor_lnum = nil
       local function enable_cursor()
@@ -130,33 +132,9 @@ local function handle_empty_line(lnum)
     end
 end
 
-local function handle_normal_mode(key)
-  local defer = true
-
+local function handle_normal_mode()
   local lnum = vim.fn.line('.')
-  if key == 'j' then
-    defer = false
-    lnum = lnum + 1
-  elseif key == 'k' then
-    defer = false
-    lnum = lnum - 1
-  end
-  if lnum < 1 then
-    lnum = 1
-    defer = false
-  end
-
-  if defer then
-    local function defered()
-      if CurrentMode == 'n' then
-        handle_empty_line(vim.fn.line('.'))
-      end
-    end
-
-    return vim.schedule(defered)
-  end
-
-  return handle_empty_line(lnum)
+  handle_empty_line(lnum)
 end
 
 -- TODO: Prevent deleting behind line number spaces in insert mode
@@ -201,13 +179,13 @@ end
 
 --------- Trigger on auto commands -----------
 function _MarkFoldableAuCommandModeChange()
-  --if get_is_in_menu() then return end
   PreviousMode = CurrentMode
 
   CurrentMode = vim.fn.mode()
 
   if CurrentMode == 'i' then
-    clear_spaces()
+    local lnum = vim.fn.line('.')
+    clear_spaces(lnum - 1, lnum)
     space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$') + 1)
 
     handle_insert_mode()
@@ -217,9 +195,6 @@ function _MarkFoldableAuCommandModeChange()
   if PreviousMode == 'i' then
     local function clear()
       clear_current_line_space()
-
-      clear_spaces()
-      space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$') + 1)
       handle_empty_line(vim.fn.line('.'))
     end
 
@@ -246,10 +221,25 @@ end
 
 function _MarkFoldableAuCommandBufRead()
   write_virtual_text(config)
+
+  local buff_len = vim.fn.line('$')
+  if current_buff_length ~= buff_len then
+    clear_fold_marks()
+    clear_spaces(1, vim.fn.line('$'))
+    space_lines(config, 1, vim.fn.line('$'))
+  end
+
+  current_buff_length = buff_len
+
+  if CurrentMode == 'i' then
+    vim.schedule(handle_insert_mode)
+  end
+  if CurrentMode == 'n' then
+    handle_normal_mode()
+  end
 end
 
---cmd([[autocmd BufRead,BufNewFile,CursorMoved,CursorMovedI * execute "lua _MarkFoldableAuCommandBufRead()"]])
-cmd([[autocmd BufRead,BufNewFile * execute "lua _MarkFoldableAuCommandBufRead()"]])
+cmd([[autocmd BufRead,BufNewFile,CursorMoved,CursorMovedI * execute "lua _MarkFoldableAuCommandBufRead()"]])
 cmd([[autocmd TextChanged * execute "lua _MarkFoldableAuCommandTextChanged()"]])
 cmd([[autocmd ModeChanged * execute "lua _MarkFoldableAuCommandModeChange()"]])
 
@@ -258,19 +248,11 @@ local function write_v_text()
 end
 
 vim.on_key(function(key)
+  clear_cursor_text()
   if get_is_in_menu() then return end
 
-  clear_cursor_text()
-
-  local is_entering_insert_mode = CurrentMode == 'n' and (key == 'i' or key == 'a' or key == 'I')
-
-  if not is_entering_insert_mode then
+  local pressed = string.find(tostring(key), "\xfd") ~= nil
+  if pressed and vim.api.nvim_get_mode().mode == "n" then
     vim.schedule(write_v_text)
-  end
-  if CurrentMode == 'i' then
-    vim.schedule(handle_insert_mode)
-  end
-  if CurrentMode == 'n' then
-    handle_normal_mode(key)
   end
 end)

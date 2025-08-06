@@ -9,7 +9,6 @@ local conf = con.get_config()
 
 local spaces_id = vim.api.nvim_create_namespace('markfoldable_folder_spaces')
 local arrow_id = vim.api.nvim_create_namespace('markfoldable_folder_ids')
-local current_buff_length = nil
 local open_marker = conf.opened_icon
 local closed_marker = conf.closed_icon
 local closed_folds_lnums = {}
@@ -57,9 +56,9 @@ local function mark_folds()
   end
 end
 
-local function clear_spaces()
-  local line_start = vim.fn.line('w0') - 1
-  local line_end = vim.fn.line('w$')
+local function clear_spaces(line_start, line_end)
+  --local line_start = vim.fn.line('w0') - 1
+    --local line_end = vim.fn.line('w$')
   local bnr = vim.fn.bufnr('%')
   vim.api.nvim_buf_clear_namespace(bnr, spaces_id, line_start, line_end)
 end
@@ -81,12 +80,6 @@ local function write_virtual_text(config)
     return
   end
 
-  local buff_len = vim.fn.line('$')
-  if current_buff_length ~= buff_len then
-    clear_virtual_text()
-  end
-
-  current_buff_length = buff_len
 
   mark_folds()
 
@@ -100,4 +93,5 @@ return {
   clear_spaces = clear_spaces,
   space_lines = space_lines,
   mark_folds = mark_folds,
+    clear_fold_marks = clear_fold_marks,
 }
