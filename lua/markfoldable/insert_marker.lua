@@ -1,50 +1,34 @@
 local vim = vim
 
-local GetHighlightColor = require('markfoldable.get_highlight_color')
+local get_highlight_color = require('markfoldable.get_highlight_color')
 
-local background = GetHighlightColor('Normal', 'guibg')
+local function get_background()
+  local background = get_highlight_color('Normal', 'guibg')
 
-if (string.len(background) <= 0) then
-  background = 'NONE'
+  if (string.len(background) <= 0) then
+    background = 'NONE'
+  end
+
+  return background
 end
 
-local function InsertMarker(lineNumber, char, col, position, ns_id, config, is_open)
+local function InsertMarker(lineNumber, char, col, position, ns_id, config, higroup)
+  local background = get_background()
   local bg = config.anchor_bg
   local fg = config.anchor_color
 
-  local is_closed = is_open == false
-
-  if is_closed then
-    bg = GetHighlightColor('Folded', 'guibg')
-  end
-
-  local is_current = vim.fn.line(".") == (lineNumber + 1)
-
-  if is_current then
-    bg = GetHighlightColor('CursorLine', 'guibg')
-    fg = config.anchor_cursor_color
-  end
-
-  local gui = ""
-
-  if config.italic then gui = gui .. "italic," end
-  if config.bold then gui = gui .. "bold," end
-  if config.underline then gui = gui .. "underline," end
-  if config.undercurl then gui = gui .. "undercurl," end
   local guibg = string.len(bg) > 0 and bg or background
 
-  local higroup = 'AnchorageMarkerSpacer'
-
-  if is_open == false then higroup = 'AnchorageAccordianMarkerClosed' end
-  if is_open then higroup = 'AnchorageAccordianMarkerOpen' end
-  if is_current then higroup = 'AnchorageAccordianMarkerCurrent' end
-
-  local hilight = [[hi ]] .. higroup .. [[ guifg=]] .. fg .. [[ guibg=]] .. guibg
-  if string.len(gui) > 0 then
-    hilight = hilight .. [[ gui=]] .. gui
-  end
-
-  vim.cmd(hilight)
+  vim.api.nvim_set_hl(0, higroup, {
+    fg = fg,
+    bg = guibg,
+    italic = config.italic,
+    bold = config. bold,
+    undercurl = config.undercurl,
+    underline = config.underline,
+    reverse = config.reverse or false,
+    blend = config.blend or 0,
+  })
 
   local api = vim.api
   local bnr = vim.fn.bufnr('%')

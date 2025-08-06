@@ -8,7 +8,6 @@ A simple Neovim plugin for marking folds as opened or closed.
 #### Lazy
 
 
-
 ```lua
   {
     'kevinhwang91/nvim-ufo',
@@ -42,6 +41,3 @@ Note: This plugin is an extension of the amazing `kevinhwang91/nvim-ufo` plugin.
     undercurl = false,
   })
 ```
-
-
-
