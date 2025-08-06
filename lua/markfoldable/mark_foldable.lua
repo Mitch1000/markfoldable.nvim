@@ -45,8 +45,8 @@ local function mark_fold(lnum)
 end
 
 ----------------------- Exported Functions -----------------------------------
-local function space_lines(config)
-  for lnum = vim.fn.line('w0') - 1,vim.fn.line('w$'),1 do
+ function space_lines(config, start, endl)
+  for lnum = start,endl,1 do
     space_line(lnum, "inline", config)
   end
 end
@@ -90,7 +90,9 @@ local function write_virtual_text(config)
 
   mark_folds()
 
-  space_lines(config)
+  -- space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$'))
+  -- space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$'))
+  space_lines(config, 1, vim.fn.line('$') + 1)
 end
 
 return {
