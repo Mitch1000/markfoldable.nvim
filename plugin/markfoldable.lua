@@ -200,11 +200,12 @@ function _MarkFoldableAuCommandModeChange()
 
   if PreviousMode == 'i' and CurrentMode == 'n' then
     local function clear()
-      local lnum = vim.fn.line('.')
+      --local lnum = vim.fn.line('.')
       clear_current_line_space()
       handle_empty_line(vim.fn.line('.'))
-      space_lines(config, lnum - 1, lnum)
     end
+    local lnum = vim.fn.line('.')
+    space_lines(config, lnum - 1, lnum)
 
     local function defered_clear()
       vim.schedule(clear)
