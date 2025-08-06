@@ -104,7 +104,7 @@ local function get_is_in_menu()
   return false
 end
 
-local function handle_empty_line(lnum)
+local function handle_empty_line(lnum, background)
   local function hide_cursor()
     if vim.o.guicursor ~= noCursor then
       saved_cursor = vim.o.guicursor
@@ -123,7 +123,9 @@ local function handle_empty_line(lnum)
     if string.len(line) < 1 then
       hide_cursor()
       --local new_line_cursor_lnum = lnum
-      InsertMarker(lnum - 1, "  █", 0, "overlay", new_line_cursor_id, get_cursor_config(), higroup_cursor)
+      local c_config = get_cursor_config()
+      c_config.anchor_bg = background or c_config.anchor_bg
+      InsertMarker(lnum - 1, "  █", 0, "overlay", new_line_cursor_id, c_config, higroup_cursor)
     else
       new_line_cursor_lnum = nil
       local function enable_cursor()
@@ -133,9 +135,9 @@ local function handle_empty_line(lnum)
     end
 end
 
-local function handle_normal_mode()
+local function handle_normal_mode(background)
   local lnum = vim.fn.line('.')
-  handle_empty_line(lnum)
+  handle_empty_line(lnum, background)
 end
 
 -- TODO: Prevent deleting behind line number spaces in insert mode
@@ -202,12 +204,15 @@ function _MarkFoldableAuCommandModeChange()
 
   if PreviousMode == 'i' and CurrentMode == 'n' then
     local function clear()
-      --local lnum = vim.fn.line('.')
       clear_current_line_space()
       handle_empty_line(vim.fn.line('.'))
     end
-    local lnum = vim.fn.line('.')
-    space_lines(config, lnum - 1, lnum)
+    local col_pos = vim.fn.getpos('.')[3]
+
+    if col_pos == 1 then
+      local lnum = vim.fn.line('.')
+      space_lines(config, lnum - 1, lnum)
+    end
 
     local function defered_clear()
       vim.schedule(clear)
@@ -257,6 +262,11 @@ function _MarkFoldableAuCommandBufRead()
 
   if CurrentMode == 'n' then
     handle_normal_mode()
+  end
+
+  if CurrentMode == 'v' or CurrentMode == 'V' or CurrentMode == [[]] then
+    local background = get_highlight_color("Normal", "guibg")
+    handle_normal_mode(background)
   end
 
   local top_lnum = vim.fn.line('w0')
