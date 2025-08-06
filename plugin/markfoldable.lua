@@ -172,6 +172,10 @@ local function handle_insert_mode()
 
   local function shift(shift_lnum)
     -- To prevent first character from jumping when writing in at in insert mode
+    --
+    local bnr = vim.fn.bufnr('%')
+    vim.api.nvim_buf_clear_namespace(bnr, insert_space_id, shift_lnum - 1, shift_lnum)
+    vim.api.nvim_buf_clear_namespace(bnr, insert_space_overlay_id, shift_lnum - 1, shift_lnum)
     InsertMarker(shift_lnum - 1, "  ", 0, "overlay", insert_space_overlay_id, get_cursor_config(), higroup_cursor)
     InsertMarker(shift_lnum - 1, "  ", 0, "inline", insert_space_id, get_cursor_config(), higroup_cursor)
   end
@@ -196,8 +200,8 @@ function _MarkFoldableAuCommandModeChange()
 
   if PreviousMode == 'i' and CurrentMode == 'n' then
     local function clear()
-      clear_current_line_space()
       local lnum = vim.fn.line('.')
+      clear_current_line_space()
       handle_empty_line(vim.fn.line('.'))
       space_lines(config, lnum - 1, lnum)
     end
