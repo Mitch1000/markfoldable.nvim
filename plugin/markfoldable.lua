@@ -35,6 +35,7 @@ local insert_space_overlay_id = vim.api.nvim_create_namespace('markfoldable_inse
 local new_line_cursor_lnum = nil
 local new_line_cursor_id = vim.api.nvim_create_namespace('markfoldable_new_line_cursor')
 local noCursor = 'a:noCursor'
+local current_top_lnum = 1
 
 local cursor_config = {}
 
@@ -191,7 +192,8 @@ function _MarkFoldableAuCommandModeChange()
 
   if CurrentMode == 'i' then
     local lnum = vim.fn.line('.')
-    clear_spaces(lnum - 1, lnum)
+    -- clear space above and below current line to account for inserting in newline
+    clear_spaces(lnum - 2, lnum + 2)
     space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$') + 1)
 
     handle_insert_mode()
@@ -228,14 +230,23 @@ function _MarkFoldableAuCommandTextChanged()
   mark_folds()
 end
 
-function _MarkFoldableAuCommandBufRead()
+local function write_v_text()
   write_virtual_text(config)
+end
 
-  local buff_len = vim.fn.line('$')
+function _MarkFoldableAuCommandBufRead()
+  --vim.schedule(write_v_text)
+  write_virtual_text(config)
+  local buff_len = vim.fn.line('w$')
+
   if current_buff_length ~= buff_len then
-    clear_fold_marks()
-    clear_spaces(1, vim.fn.line('$'))
-    space_lines(config, 1, vim.fn.line('$'))
+    local function clear_marks()
+      clear_fold_marks()
+      clear_spaces(vim.fn.line('w0') - 1, vim.fn.line('w$'))
+      space_lines(config, vim.fn.line('w0') - 1, vim.fn.line('w$'))
+      mark_folds()
+    end
+    vim.schedule(clear_marks)
   end
 
   current_buff_length = buff_len
@@ -247,15 +258,17 @@ function _MarkFoldableAuCommandBufRead()
   if CurrentMode == 'n' then
     handle_normal_mode()
   end
+
+  local top_lnum = vim.fn.line('w0')
+  if current_top_lnum ~= top_lnum then
+    vim.schedule(mark_folds)
+    current_top_lnum = top_lnum
+  end
 end
 
 cmd([[autocmd BufRead,BufNewFile,CursorMoved,CursorMovedI * execute "lua _MarkFoldableAuCommandBufRead()"]])
 cmd([[autocmd TextChanged * execute "lua _MarkFoldableAuCommandTextChanged()"]])
 cmd([[autocmd ModeChanged * execute "lua _MarkFoldableAuCommandModeChange()"]])
-
-local function write_v_text()
-  write_virtual_text(config)
-end
 
 vim.on_key(function(key)
   clear_cursor_text()

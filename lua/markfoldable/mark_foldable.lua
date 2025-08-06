@@ -44,7 +44,7 @@ local function mark_fold(lnum)
 end
 
 ----------------------- Exported Functions -----------------------------------
- function space_lines(config, start, endl)
+local function space_lines(config, start, endl)
   for lnum = start,endl,1 do
     space_line(lnum, "inline", config)
   end
@@ -70,22 +70,14 @@ local function clear_fold_marks()
   vim.api.nvim_buf_clear_namespace(bnr, arrow_id, line_start, line_end)
 end
 
-local function clear_virtual_text()
-  clear_spaces()
-  clear_fold_marks()
-end
-
 local function write_virtual_text(config)
   if CurrentMode == 'i' then
     return
   end
 
-
   mark_folds()
 
-  -- space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$'))
-  -- space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$'))
-  space_lines(config, 1, vim.fn.line('$') + 1)
+  space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$'))
 end
 
 return {
