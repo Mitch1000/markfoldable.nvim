@@ -195,7 +195,7 @@ function _MarkFoldableAuCommandModeChange()
   if CurrentMode == 'i' then
     local lnum = vim.fn.line('.')
     -- clear space above and below current line to account for inserting in newline
-    clear_spaces(lnum - 2, lnum + 2)
+    clear_spaces(math.max(lnum - 2, 1), lnum + 2)
     space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$') + 1)
 
     handle_insert_mode()
