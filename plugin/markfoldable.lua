@@ -176,10 +176,14 @@ local function handle_insert_mode()
   local function shift(shift_lnum)
     -- To prevent first character from jumping when writing in at in insert mode
     --
+    -- clear spaces of current line to avoid over spacing
+    clear_spaces(math.max(shift_lnum - 1, 1), shift_lnum)
     local bnr = vim.fn.bufnr('%')
-    vim.api.nvim_buf_clear_namespace(bnr, insert_space_id, shift_lnum - 1, shift_lnum)
-    vim.api.nvim_buf_clear_namespace(bnr, insert_space_overlay_id, shift_lnum - 1, shift_lnum)
+    vim.api.nvim_buf_clear_namespace(bnr, insert_space_id, vim.fn.line('w0') - 1, vim.fn.line('w$'))
+    vim.api.nvim_buf_clear_namespace(bnr, insert_space_overlay_id, vim.fn.line('w0') - 1, vim.fn.line('w$'))
+    -- write text in overlay to hide any shifting letters
     InsertMarker(shift_lnum - 1, "  ", 0, "overlay", insert_space_overlay_id, get_cursor_config(), higroup_cursor)
+    -- write text inline to properly space text
     InsertMarker(shift_lnum - 1, "  ", 0, "inline", insert_space_id, get_cursor_config(), higroup_cursor)
   end
 
