@@ -177,7 +177,8 @@ local function handle_insert_mode()
     -- To prevent first character from jumping when writing in at in insert mode
     --
     -- clear spaces of current line to avoid over spacing
-    clear_spaces(math.max(shift_lnum - 1, 1), shift_lnum)
+    --
+    clear_spaces(math.max(shift_lnum - 1, 0), shift_lnum)
     local bnr = vim.fn.bufnr('%')
     vim.api.nvim_buf_clear_namespace(bnr, insert_space_id, vim.fn.line('w0') - 1, vim.fn.line('w$'))
     vim.api.nvim_buf_clear_namespace(bnr, insert_space_overlay_id, vim.fn.line('w0') - 1, vim.fn.line('w$'))
@@ -251,7 +252,7 @@ function _MarkFoldableAuCommandBufRead()
   if current_buff_length ~= buff_len then
     local function clear_marks()
       clear_fold_marks()
-      clear_spaces(vim.fn.line('w0') - 1, vim.fn.line('w$'))
+      clear_spaces(vim.fn.line('w0'), vim.fn.line('w$'))
       space_lines(config, vim.fn.line('w0') - 1, vim.fn.line('w$'))
       mark_folds()
     end

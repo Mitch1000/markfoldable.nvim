@@ -7,7 +7,7 @@ local get_is_open = require('markfoldable.line').get_is_open
 local get_is_marked = require('markfoldable.line').get_is_marked
 local conf = con.get_config()
 
-local spaces_id = vim.api.nvim_create_namespace('markfoldable_folder_spaces')
+spaces_id = vim.api.nvim_create_namespace('markfoldable_folder_spaces')
 local arrow_id = vim.api.nvim_create_namespace('markfoldable_folder_ids')
 local open_marker = conf.opened_icon
 local closed_marker = conf.closed_icon
@@ -57,10 +57,10 @@ local function mark_folds()
 end
 
 local function clear_spaces(line_start, line_end)
-  --local line_start = vim.fn.line('w0') - 1
-    --local line_end = vim.fn.line('w$')
   local bnr = vim.fn.bufnr('%')
-  vim.api.nvim_buf_clear_namespace(bnr, spaces_id, line_start, line_end)
+  for i=line_start + 1, line_end, 1 do
+    vim.api.nvim_buf_del_extmark(bnr, spaces_id, i)
+  end
 end
 
 local function clear_fold_marks()
