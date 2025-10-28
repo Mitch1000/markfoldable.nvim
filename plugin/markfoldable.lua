@@ -113,26 +113,26 @@ local function handle_empty_line(lnum, background)
     vim.o.guicursor = noCursor
   end
 
-    local line = vim.fn.getline(lnum)
-    local bnr = vim.fn.bufnr('%')
+  local line = vim.fn.getline(lnum)
+  local bnr = vim.fn.bufnr('%')
 
-    if new_line_cursor_lnum ~= nil then
-      vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, new_line_cursor_lnum - 1, new_line_cursor_lnum)
-    end
+  if new_line_cursor_lnum ~= nil then
+    vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, new_line_cursor_lnum - 1, new_line_cursor_lnum)
+  end
 
-    if string.len(line) < 1 then
-      hide_cursor()
-      --local new_line_cursor_lnum = lnum
-      local c_config = get_cursor_config()
-      c_config.anchor_bg = background or c_config.anchor_bg
-      InsertMarker(lnum - 1, "  █", 0, "overlay", new_line_cursor_id, c_config, higroup_cursor)
-    else
-      new_line_cursor_lnum = nil
-      local function enable_cursor()
-        vim.o.guicursor = saved_cursor
-      end
-      vim.schedule(enable_cursor)
+  if string.len(line) < 1 then
+    hide_cursor()
+    --local new_line_cursor_lnum = lnum
+    local c_config = get_cursor_config()
+    c_config.anchor_bg = background or c_config.anchor_bg
+    InsertMarker(lnum - 1, "  █", 0, "overlay", new_line_cursor_id, c_config, higroup_cursor)
+  else
+    new_line_cursor_lnum = nil
+    local function enable_cursor()
+      vim.o.guicursor = saved_cursor
     end
+    vim.schedule(enable_cursor)
+  end
 end
 
 local function handle_normal_mode(background)
