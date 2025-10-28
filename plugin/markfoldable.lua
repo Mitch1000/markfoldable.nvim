@@ -252,7 +252,7 @@ function _MarkFoldableAuCommandBufRead()
   if current_buff_length ~= buff_len then
     local function clear_marks()
       clear_fold_marks()
-      clear_spaces(vim.fn.line('w0'), vim.fn.line('w$'))
+      clear_spaces(vim.fn.line('w0'), vim.fn.line('w$') + 1)
       space_lines(config, vim.fn.line('w0') - 1, vim.fn.line('w$'))
       mark_folds()
     end
