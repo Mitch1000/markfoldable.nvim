@@ -15,7 +15,7 @@ local closed_folds_lnums = {}
 
 local function space_line(lnum, position, config)
   if lnum <= 0 then return end
-  if lnum > vim.fn.line('w$') then return end
+  if lnum > vim.fn.line('$') then return end
   local is_current = vim.fn.line('.') == lnum
 
   if is_current and CurrentMode == 'i' then

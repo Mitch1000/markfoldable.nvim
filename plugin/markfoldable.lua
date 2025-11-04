@@ -72,14 +72,14 @@ end
 
 local function clear_cursor_text()
   local line_start = vim.fn.line('w0') - 1
-  local line_end = vim.fn.line('w$')
+  local line_end = vim.fn.line('$')
   local bnr = vim.fn.bufnr('%')
   vim.api.nvim_buf_clear_namespace(bnr, new_line_cursor_id, line_start, line_end)
 end
 
 local function clear_current_line_space()
   local line_start = vim.fn.line('w0') - 1
-  local line_end = vim.fn.line('w$')
+  local line_end = vim.fn.line('$')
   local bnr = vim.fn.bufnr('%')
   vim.api.nvim_buf_clear_namespace(bnr, insert_space_id, line_start, line_end)
   vim.api.nvim_buf_clear_namespace(bnr, insert_space_overlay_id, line_start, line_end)
@@ -112,7 +112,7 @@ local function handle_empty_line(lnum, background)
 
     vim.o.guicursor = noCursor
   end
-
+ 
   local line = vim.fn.getline(lnum)
   local bnr = vim.fn.bufnr('%')
 
@@ -180,8 +180,9 @@ local function handle_insert_mode()
     --
     clear_spaces(math.max(shift_lnum - 1, 0), shift_lnum)
     local bnr = vim.fn.bufnr('%')
-    vim.api.nvim_buf_clear_namespace(bnr, insert_space_id, vim.fn.line('w0') - 1, vim.fn.line('w$'))
-    vim.api.nvim_buf_clear_namespace(bnr, insert_space_overlay_id, vim.fn.line('w0') - 1, vim.fn.line('w$'))
+
+    vim.api.nvim_buf_clear_namespace(bnr, insert_space_id, vim.fn.line('w0') - 1, vim.fn.line('$'))
+    vim.api.nvim_buf_clear_namespace(bnr, insert_space_overlay_id, vim.fn.line('w0') - 1, vim.fn.line('$'))
     -- write text in overlay to hide any shifting letters
     InsertMarker(shift_lnum - 1, "  ", 0, "overlay", insert_space_overlay_id, get_cursor_config(), higroup_cursor)
     -- write text inline to properly space text
@@ -197,11 +198,18 @@ function _MarkFoldableAuCommandModeChange()
 
   CurrentMode = vim.fn.mode()
 
+  -- Visual mode
+  if CurrentMode == '' then
+    clear_spaces(vim.fn.line('w0'), vim.fn.line('$') + 1)
+    space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('$'))
+    return
+  end
+
   if CurrentMode == 'i' then
     local lnum = vim.fn.line('.')
     -- clear space above and below current line to account for inserting in newline
     clear_spaces(math.max(lnum - 2, 1), lnum + 2)
-    space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('w$') + 1)
+    space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('$') + 1)
 
     handle_insert_mode()
     return
@@ -245,15 +253,24 @@ local function write_v_text()
 end
 
 function _MarkFoldableAuCommandBufRead()
+  --- Visual Mode
+  if CurrentMode == 'v' or CurrentMode == 'V' or CurrentMode == [[]] then
+    clear_spaces(vim.fn.line('w0'), vim.fn.line('$') + 1)
+    space_lines(config, vim.fn.line('w0') - 1,vim.fn.line('$'))
+    --local background = get_highlight_color("Normal", "guibg")
+    --handle_normal_mode(background)
+    return
+  end
+
   --vim.schedule(write_v_text)
   write_virtual_text(config)
-  local buff_len = vim.fn.line('w$')
+  local buff_len = vim.fn.line('$')
 
   if current_buff_length ~= buff_len then
     local function clear_marks()
       clear_fold_marks()
-      clear_spaces(vim.fn.line('w0'), vim.fn.line('w$') + 1)
-      space_lines(config, vim.fn.line('w0') - 1, vim.fn.line('w$'))
+      clear_spaces(vim.fn.line('w0'), buff_len + 1)
+      space_lines(config, vim.fn.line('w0') - 1, buff_len)
       mark_folds()
     end
     vim.schedule(clear_marks)
@@ -267,11 +284,6 @@ function _MarkFoldableAuCommandBufRead()
 
   if CurrentMode == 'n' then
     handle_normal_mode()
-  end
-
-  if CurrentMode == 'v' or CurrentMode == 'V' or CurrentMode == [[]] then
-    local background = get_highlight_color("Normal", "guibg")
-    handle_normal_mode(background)
   end
 
   local top_lnum = vim.fn.line('w0')
