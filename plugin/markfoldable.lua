@@ -199,7 +199,7 @@ function _MarkFoldableAuCommandModeChange()
   CurrentMode = vim.fn.mode()
 
   -- Visual mode
-  if CurrentMode == '' then
+  if CurrentMode == '' or CurrentMode == 'v' then
     clear_spaces(vim.fn.line('0'), vim.fn.line('$') + 1)
     space_lines(config, vim.fn.line('0'),vim.fn.line('$'))
     return
@@ -254,7 +254,7 @@ end
 
 function _MarkFoldableAuCommandBufRead()
   --- Visual Mode
-  if CurrentMode == 'v' or CurrentMode == 'V' or CurrentMode == [[]] then
+  if CurrentMode == 'v' or CurrentMode == [[]] then
     clear_spaces(vim.fn.line('0'), vim.fn.line('$') + 1)
     space_lines(config, vim.fn.line('0'),vim.fn.line('$'))
     --local background = get_highlight_color("Normal", "guibg")
